@@ -49,14 +49,7 @@ export default function Home() {
 
     // Create rows to set into table.
     const rows = jobs.map((job) => ({
-      name: job.name,
-      runs: job.runs,
-      fails: job.fails,
-      skips: job.skips,
-      required: job.required,
-      pr_runs: job.pr_runs,
-      pr_fails: job.pr_fails,
-      pr_skips: job.pr_skips,
+      ...job,
       weather: getWeatherIndex(job),
     }));
     setRows(rows);
