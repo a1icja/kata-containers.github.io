@@ -24,7 +24,7 @@
 
 // Github API URL for the kata-container ci-nightly workflow's runs. This
 // will only get the most recent 10 runs ('page' is empty, and 'per_page=10').
-var ci_nightly_runs_url =
+const ci_nightly_runs_url =
   "https://api.github.com/repos/" +
   "kata-containers/kata-containers/actions/workflows/" +
   "ci-nightly.yaml/runs?per_page=10";
@@ -34,34 +34,28 @@ var ci_nightly_runs_url =
 // Current approach (there may be better alternatives) is to:
 //   1. retrieve the last 10 closed PRs
 //   2. fetch the checks for each PR (using the head commit SHA)
-var pull_requests_url =
+const pull_requests_url =
   "https://api.github.com/repos/" +
   "kata-containers/kata-containers/pulls?state=closed&per_page=";
-var pr_checks_url =  // for our purposes, 'check' refers to a job in the context of a PR
+const pr_checks_url =  // for our purposes, 'check' refers to a job in the context of a PR
   "https://api.github.com/repos/" +
   "kata-containers/kata-containers/commits/";  // will be followed by {commit_sha}/check-runs
   // Max of 100 per page, w/ little *over* 300 checks total, so that's 40 calls total for 10 PRs
 
 // Github API URL for the main branch of the kata-containers repo.
 // Used to get the list of required jobs.
-var main_branch_url = 
-  "https://api.github.com/repos/" +
-  "kata-containers/kata-containers/branches/main";
-
-// Github API URL for the main branch of the kata-containers repo.
-// Used to get the list of required jobs.
-var main_branch_url = 
+const main_branch_url = 
   "https://api.github.com/repos/" +
   "kata-containers/kata-containers/branches/main";
 
 // The number of jobs to fetch from the github API on each paged request.
-var jobs_per_request = 100;
+const jobs_per_request = 100;
 // The last X closed PRs to retrieve
-var pr_count = 5; 
+const pr_count = 5; 
 // Complete list of jobs (from the CI nightly run)
-var job_names = new Set();
+const job_names = new Set();
 // Count of the number of fetches
-var fetch_count = 0;
+let fetch_count = 0;
 
 // Perform a github API request for workflow runs.
 async function fetch_workflow_runs() {
@@ -111,7 +105,7 @@ function get_job_data(run) {
   // Perform the actual (paged) request
   async function fetch_jobs_by_page(which_page) {
     fetch_count++;
-    var jobs_url =
+    const jobs_url =
       run["jobs_url"] + "?per_page=" + jobs_per_request + "&page=" + which_page;
     return fetch(jobs_url, {
       headers: {
@@ -145,7 +139,7 @@ function get_job_data(run) {
     });
   }
 
-  var run_with_job_data = {
+  const run_with_job_data = {
     id: run["id"],
     run_number: run["run_number"],
     created_at: run["created_at"],
@@ -165,7 +159,7 @@ function get_check_data(pr) {
   // Perform a github API request for a list of commits for a PR (takes in the PR's head commit SHA)
   async function fetch_checks_by_page(which_page) {
     fetch_count++;
-    var checks_url = 
+    const checks_url = 
       pr_checks_url + prs_with_check_data["commit_sha"] + "/check-runs" + "?per_page=" + jobs_per_request + "&page=" + which_page;
     return fetch(checks_url, {  
       headers: {
@@ -206,7 +200,7 @@ function get_check_data(pr) {
   }
 
   // Extract list of objects with PR commit SHAs, PR URLs, and PR number (i.e. id)
-  var prs_with_check_data = {
+  const prs_with_check_data = {
     html_url: pr["html_url"],  // link to PR page
     number: pr["number"],  // PR number (used as PR id); displayed on dashboard
     commit_sha: pr["head"]["sha"],  // For getting checks run on PR branch
@@ -220,14 +214,14 @@ function get_check_data(pr) {
 
 // Extract list of required jobs (i.e. main branch details: protection: required_status_checks: contexts)
 function get_required_jobs(main_branch) {
-  var required_jobs = main_branch["protection"]["required_status_checks"]["contexts"];
+  const required_jobs = main_branch["protection"]["required_status_checks"]["contexts"];
   // console.log('required jobs: ', required_jobs);
   return required_jobs;
 }
 
 // Calculate and return job stats across all runs
 function compute_job_stats(runs_with_job_data, prs_with_check_data, required_jobs) {
-  var job_stats = {};
+  const job_stats = {};
   for (const run of runs_with_job_data) {
     for (const job of run["jobs"]) {
       if (!(job["name"] in job_stats)) {
@@ -247,7 +241,7 @@ function compute_job_stats(runs_with_job_data, prs_with_check_data, required_job
           pr_nums: [], // list of PR numbers that this job is associated with
         };
       }
-      var job_stat = job_stats[job["name"]];
+      const job_stat = job_stats[job["name"]];
       job_stat["runs"] += 1;
       job_stat["run_nums"].push(run["run_number"]);
       job_stat["urls"].push(job["html_url"]);
@@ -269,7 +263,7 @@ function compute_job_stats(runs_with_job_data, prs_with_check_data, required_job
   for (const pr of prs_with_check_data) {
     for (const check of pr["checks"]) {
       if ((check["name"] in job_stats)) {
-        var job_stat = job_stats[check["name"]];
+        const job_stat = job_stats[check["name"]];
         job_stat["pr_runs"] += 1;
         job_stat["pr_urls"].push(pr["html_url"])
         job_stat["pr_nums"].push(pr["number"])
@@ -293,26 +287,26 @@ function compute_job_stats(runs_with_job_data, prs_with_check_data, required_job
 
 async function main() {
   // Fetch recent workflow runs via the github API
-  var workflow_runs = await fetch_workflow_runs();
+  const workflow_runs = await fetch_workflow_runs();
 
   // Fetch required jobs from main branch
-  var main_branch = await fetch_main_branch();
-  var required_jobs = get_required_jobs(main_branch);
+  const main_branch = await fetch_main_branch();
+  const required_jobs = get_required_jobs(main_branch);
 
   // Fetch job data for each of the runs.
   // Store all of this in an array of maps, runs_with_job_data.
-  var promises_buf = [];
+  const promises_buf = [];
   for (const run of workflow_runs["workflow_runs"]) {
     promises_buf.push(get_job_data(run));
   }
   runs_with_job_data = await Promise.all(promises_buf);
 
   // Fetch recent pull requests via the github API
-  var pull_requests = await fetch_pull_requests();
+  const pull_requests = await fetch_pull_requests();
 
   // Fetch last pr_count closed PRs
   // Store all of this in an array of maps, prs_with_check_data.
-  var promises_buffer = [];
+  const promises_buffer = [];
   for (const pr of pull_requests) {
     promises_buffer.push(get_check_data(pr));
   }
@@ -321,7 +315,7 @@ async function main() {
   // Transform the raw details of each run and its jobs' results into a
   // an array of just the jobs and their overall results (e.g. pass or fail,
   // and the URLs associated with them).
-  var job_stats = compute_job_stats(runs_with_job_data, prs_with_check_data, required_jobs);
+  const job_stats = compute_job_stats(runs_with_job_data, prs_with_check_data, required_jobs);
 
   // Write the job_stats to console as a JSON object
   console.log(JSON.stringify(job_stats));
