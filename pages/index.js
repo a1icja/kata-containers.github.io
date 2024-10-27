@@ -34,6 +34,7 @@ export default function Home() {
         });
         setJobs(jobData);
       } catch (error) {
+        // TODO: Add pop-up/toast message for error
         console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
