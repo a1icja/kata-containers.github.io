@@ -213,7 +213,6 @@ function get_check_data(pr) {
 // Extract list of required jobs (i.e. main branch details: protection: required_status_checks: contexts)
 function get_required_jobs(main_branch) {
   const required_jobs = main_branch["protection"]["required_status_checks"]["contexts"];
-  // console.log('required jobs: ', required_jobs);
   return required_jobs;
 }
 
