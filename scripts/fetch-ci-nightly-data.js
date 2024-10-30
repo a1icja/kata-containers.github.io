@@ -319,7 +319,6 @@ async function main() {
 
   // Write the job_stats to console as a JSON object
   console.log(JSON.stringify(job_stats));
-  // console.log(JSON.stringify(required_jobs));
 }
 
 
