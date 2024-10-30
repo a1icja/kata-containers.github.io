@@ -178,7 +178,6 @@ function get_check_data(pr) {
     }
     return fetch_checks_by_page(p)
     .then(function (checks_request) {
-      // console.log('checks_request', checks_request);
       for (const check of checks_request["check_runs"]) {
         // NOTE: For now, excluding checks that are not also run in CI Nightly
         if (job_names.has(check["name"])) {  
