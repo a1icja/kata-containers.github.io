@@ -203,7 +203,6 @@ function get_check_data(pr) {
     html_url: pr["html_url"],  // link to PR page
     number: pr["number"],  // PR number (used as PR id); displayed on dashboard
     commit_sha: pr["head"]["sha"],  // For getting checks run on PR branch
-    // commit_sha: pr["merge_commit_sha"],  // For getting checks run on main branch after merge
     // NOTE: using for now b/c we'll be linking to the PR page, where these checks are listed...
     checks: [],  // will be populated later with fetch_checks
   };
